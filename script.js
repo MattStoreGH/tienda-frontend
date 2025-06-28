@@ -14,11 +14,12 @@ async function login() {
 
   const data = await res.json();
 
-if (res.ok) {
-  sessionStorage.setItem("usuario", usuario);
-  window.location.href = "panel.html";
-} else {
-  document.getElementById("error").innerText = data.mensaje || "Credenciales incorrectas";
+  if (res.ok) {
+    sessionStorage.setItem("usuario", usuario);
+    window.location.href = "panel.html";
+  } else {
+    document.getElementById("error").innerText = data.mensaje || "Credenciales incorrectas";
+  }
 }
 
 async function mostrar(seccion) {
