@@ -1,49 +1,135 @@
 const API = "https://tiendamattstore.onrender.com/api";
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/<TU_CLOUD_NAME>/image/upload";
+const CLOUDINARY_PRESET = "<TU_UPLOAD_PRESET>";
 
-// LOGIN
 async function login() {
   const usuario = document.getElementById("usuario").value;
   const password = document.getElementById("password").value;
 
-  try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario, password })
-    });
-    const data = await res.json();
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuario, password }),
+  });
 
-    if (data.success) {
-      sessionStorage.setItem("usuario", usuario);
-      window.location.href = "panel.html";
-    } else {
-      document.getElementById("error").innerText = data.message;
-    }
-  } catch (err) {
-    document.getElementById("error").innerText = "Error de conexión";
+  const data = await res.json();
+
+  if (data.success) {
+    sessionStorage.setItem("usuario", usuario);
+    window.location.href = "panel.html";
+  } else {
+    document.getElementById("error").innerText = data.message;
   }
 }
 
-// MOSTRAR SECCIONES DEL PANEL
 async function mostrar(seccion) {
   const div = document.getElementById("seccion");
   div.innerHTML = `<h2>${seccion.toUpperCase()}</h2><p>Cargando datos...</p>`;
 
-  const url = `${API}/${seccion}`;
-  const res = await fetch(url);
+  const res = await fetch(`${API}/${seccion}`);
   const datos = await res.json();
 
   div.innerHTML = `
     <button onclick="abrirFormulario('${seccion}')">➕ Agregar</button>
     <input type="text" placeholder="Buscar..." oninput="buscar('${seccion}', this.value)">
     <ul id="lista-${seccion}">
-      ${datos.map(item => `<li>${JSON.stringify(item)}</li>`).join('')}
+      ${datos.map(item => `<li>${JSON.stringify(item)}</li>`).join("")}
     </ul>
   `;
 }
 
 function abrirFormulario(tipo) {
-  alert("Aquí irá un formulario emergente para agregar a " + tipo);
+  const body = document.getElementById("modal-body");
+
+  let formHtml = "";
+
+  if (tipo === "productos") {
+    formHtml = `
+      <h3>Agregar producto</h3>
+      <input placeholder="ID del producto" id="id">
+      <input placeholder="Nombre" id="nombre">
+      <input placeholder="Precio" type="number" id="precio">
+      <input placeholder="Popularidad (1-5)" type="number" id="popularidad">
+      <button onclick="enviarFormulario('${tipo}')">Guardar</button>
+    `;
+  } else if (tipo === "clientes") {
+    formHtml = `
+      <h3>Agregar cliente</h3>
+      <input placeholder="Número de cliente" id="numero">
+      <input placeholder="Producto comprado" id="compra">
+      <input placeholder="ID del producto" id="id">
+      <input placeholder="Monto" type="number" id="monto">
+      <button onclick="enviarFormulario('${tipo}')">Guardar</button>
+    `;
+  } else if (tipo === "pagos") {
+    formHtml = `
+      <h3>Agregar pago</h3>
+      <input placeholder="Monto" type="number" id="monto">
+      <input placeholder="Producto" id="producto">
+      <input placeholder="ID del producto" id="id">
+      <input type="file" id="imagen">
+      <button onclick="enviarFormulario('${tipo}')">Guardar</button>
+    `;
+  }
+
+  body.innerHTML = formHtml;
+  document.getElementById("modal").style.display = "block";
+}
+
+function cerrarModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+async function enviarFormulario(tipo) {
+  const cerrar = () => {
+    cerrarModal();
+    mostrar(tipo);
+  };
+
+  let data = {};
+
+  if (tipo === "productos") {
+    data = {
+      id: document.getElementById("id").value,
+      nombre: document.getElementById("nombre").value,
+      precio: document.getElementById("precio").value,
+      popularidad: document.getElementById("popularidad").value,
+    };
+  } else if (tipo === "clientes") {
+    data = {
+      numero: document.getElementById("numero").value,
+      compra: document.getElementById("compra").value,
+      id: document.getElementById("id").value,
+      monto: document.getElementById("monto").value,
+    };
+  } else if (tipo === "pagos") {
+    const file = document.getElementById("imagen").files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_PRESET);
+
+    const cloudRes = await fetch(CLOUDINARY_URL, {
+      method: "POST",
+      body: formData,
+    });
+
+    const cloudData = await cloudRes.json();
+
+    data = {
+      monto: document.getElementById("monto").value,
+      producto: document.getElementById("producto").value,
+      id: document.getElementById("id").value,
+      imagen: cloudData.secure_url,
+    };
+  }
+
+  const res = await fetch(`${API}/${tipo}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (res.ok) cerrar();
 }
 
 function buscar(tipo, texto) {
