@@ -32,9 +32,34 @@ async function mostrar(seccion) {
   div.innerHTML = `
     <button onclick="abrirFormulario('${seccion}')">➕ Agregar</button>
     <input type="text" placeholder="Buscar..." oninput="buscar('${seccion}', this.value)">
-    <ul id="lista-${seccion}">
-      ${datos.map(item => `<li>${JSON.stringify(item)}</li>`).join("")}
-    </ul>
+<ul id="lista-${seccion}">
+  ${datos.map(item => {
+    if (seccion === "productos") {
+      return `<li>
+        <strong>${item.nombre}</strong><br>
+        ID: ${item.id}<br>
+        Precio: S/.${item.precio}<br>
+        Popularidad: ${item.popularidad}
+      </li>`;
+    } else if (seccion === "clientes") {
+      return `<li>
+        <strong>Cliente ${item.numero || item.numero_cliente}</strong><br>
+        Producto: ${item.compra || item.producto}<br>
+        ID Producto: ${item.id || item.id_producto}<br>
+        Monto: S/.${item.monto}
+      </li>`;
+    } else if (seccion === "pagos") {
+      return `<li>
+        <strong>Pago</strong><br>
+        Producto: ${item.producto}<br>
+        ID: ${item.id || item.id_producto}<br>
+        Monto: S/.${item.monto}<br>
+        <img src="${item.imagen || item.imagen_url}" width="100">
+      </li>`;
+    }
+    return `<li>Dato no reconocido</li>`;
+  }).join("")}
+</ul>
   `;
 }
 
