@@ -1,6 +1,6 @@
 const API = "https://tiendamattstore.onrender.com/api";
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/<TU_CLOUD_NAME>/image/upload";
-const CLOUDINARY_PRESET = "<TU_UPLOAD_PRESET>";
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dw1ho2ljn/image/upload";
+const CLOUDINARY_PRESET = "ml_default";
 
 async function login() {
   const usuario = document.getElementById("usuario").value;
